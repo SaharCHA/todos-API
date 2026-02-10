@@ -48,3 +48,19 @@ async def create_todo(db: db_dependency, todo_request: TodoRequest):
     db.add(todo_request)
     db.commit()
     
+
+@app.put("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT) # обработчик для URL /todo/{todo_id}, который обновляет существующую задачу по ее идентификатору. Он принимает данные задачи в формате JSON, проверяет их с помощью модели TodoRequest и обновляет соответствующую запись в базе данных.
+async def update_todo(db:db_dependency,
+                      todo_request: TodoRequest,
+                      todo_id: int):
+    """Обновление существующей задачи по ее идентификатору."""
+    todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first() # Выборка из базы данных . Сначала вытаскиваем таблицу ,потом сравнивайм id с переданным id и выбираем первую запись которая подходит под условие. Если такой записи нет , то будет возвращено None
+    if todo is not None:    # Присваеваем и делаем коммит 
+        todo.title = todo_request.title
+        todo.description = todo_request.description
+        todo.priority = todo_request.priority
+        todo.completed = todo_request.completed
+        db.commit()
+    else: # Id не найден
+         raise HTTPException(status_code=404, detail="Todo not found")
+     
