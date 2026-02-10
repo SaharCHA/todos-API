@@ -47,7 +47,6 @@ async def create_todo(db: db_dependency, todo_request: TodoRequest):
     todo_request = models.Todo(**todo_request.model_dump())
     db.add(todo_request)
     db.commit()
-    
 
 @app.put("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT) # обработчик для URL /todo/{todo_id}, который обновляет существующую задачу по ее идентификатору. Он принимает данные задачи в формате JSON, проверяет их с помощью модели TodoRequest и обновляет соответствующую запись в базе данных.
 async def update_todo(db:db_dependency,
@@ -62,5 +61,13 @@ async def update_todo(db:db_dependency,
         todo.completed = todo_request.completed
         db.commit()
     else: # Id не найден
-         raise HTTPException(status_code=404, detail="Todo not found")
-     
+         raise HTTPException(status_code=404, detail="Todo not found")  
+
+@app.delete("/todo/{todo_id}",status_code=status.HTTP_204_NO_CONTENT)
+async def delete_todo(db: db_dependency, todo_id: int = Path(gt=0)):
+     todo_request = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+     if todo_request is not None:
+        db.delete(todo_request)
+        db.commit()
+        return
+     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Todo not found")

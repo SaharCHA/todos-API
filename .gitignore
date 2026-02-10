@@ -1,2 +1,15 @@
 venv/
-TodoApp\__pycache__
+env/
+.venv/
+
+
+# Кэш pip
+__pycache__/
+*.py[cod]
+*$py.class
+
+# pipenv / poetry / setuptools
+*.egg-info/
+*.egg
+dist/
+build/
