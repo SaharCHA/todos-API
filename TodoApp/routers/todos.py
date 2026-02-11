@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter, HTTPException, Path,status
 from database import sessionmaker
-
+import models
 router = APIRouter() # создание приложения FastAPI
 
 
@@ -28,13 +28,13 @@ class TodoRequest(BaseModel):
 async def read_all(db: db_dependency):
     """Получение всех задач из базы данных.""" # обработчик для корневого URL, который возвращает все задачи из базы данных. 
                 #Он использует зависимость get_db для получения сессии базы данных и выполняет запрос для получения всех записей из таблицы Todos.
-    return db.query(models.Todo).all()
+    return db.query(models.Todos).all()
 
 
 @router.get("/todo/{todo_id}",status_code=200) # обработчик для URL /todo/{todo_id}, который возвращает конкретную задачу по ее идентификатору.
 async def read_todo(db: db_dependency, todo_id: int = Path(gt=0)):
         """Получение конкретной задачи по ее идентификатору."""
-        todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+        todo = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
         if todo is not None:
             return todo
         raise HTTPException(status_code=404, detail="Todo not found")
@@ -43,7 +43,7 @@ async def read_todo(db: db_dependency, todo_id: int = Path(gt=0)):
 @router.post("/todo", status_code=status.HTTP_201_CREATED) # обработчик для URL /todo, который создает новую задачу в базе данных. Он принимает данные задачи в формате JSON, проверяет их с помощью модели TodoRequest и сохраняет новую задачу в базе данных.
 async def create_todo(db: db_dependency, todo_request: TodoRequest):
     """добавление новой задачи в базу данных."""
-    todo_request = models.Todo(**todo_request.model_dump())
+    todo_request = models.Todos(**todo_request.model_dump())
     db.add(todo_request)
     db.commit()
 
@@ -52,7 +52,7 @@ async def update_todo(db:db_dependency,
                       todo_request: TodoRequest,
                       todo_id: int):
     """Обновление существующей задачи по ее идентификатору."""
-    todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first() # Выборка из базы данных . Сначала вытаскиваем таблицу ,потом сравнивайм id с переданным id и выбираем первую запись которая подходит под условие. Если такой записи нет , то будет возвращено None
+    todo = db.query(models.Todos).filter(models.Todos.id == todo_id).first() # Выборка из базы данных . Сначала вытаскиваем таблицу ,потом сравнивайм id с переданным id и выбираем первую запись которая подходит под условие. Если такой записи нет , то будет возвращено None
     if todo is not None:    # Присваеваем и делаем коммит 
         todo.title = todo_request.title
         todo.description = todo_request.description
@@ -64,7 +64,7 @@ async def update_todo(db:db_dependency,
 
 @router.delete("/todo/{todo_id}",status_code=status.HTTP_204_NO_CONTENT)
 async def delete_todo(db: db_dependency, todo_id: int = Path(gt=0)):
-     todo_request = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+     todo_request = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
      if todo_request is not None:
         db.delete(todo_request)
         db.commit()
