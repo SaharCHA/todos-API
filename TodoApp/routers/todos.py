@@ -3,20 +3,10 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter, HTTPException, Path,status
-from database import sessionmaker
+from database import db_dependency
 import models
 router = APIRouter() # создание приложения FastAPI
 
-
-def get_db(): # функция для получения сессии базы данных , тоесть для взаимодействия с базой данных
-    db = sessionmaker()
-    try:
-        yield db
-    finally:
-        db.close()  
-
-
-db_dependency = Annotated[Session, Depends(get_db)] # создание зависимости для получения сессии базы данных, которая будет использоваться в обработчиках маршрутов для взаимодействия с базой данных
 
 class TodoRequest(BaseModel):
      title: str = Field(min_length=3)
