@@ -1,8 +1,10 @@
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter,Depends,status
 from pydantic import BaseModel 
 from models import Users
 from database import db_dependency
 from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordRequestForm
+from typing import Annotated
 router = APIRouter()
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
@@ -18,7 +20,16 @@ class CreateUserRequest(BaseModel):
     password: str
     role: str
 
-@router.post("/auth/")
+
+def authenticate_user(username:str,password:str,db):
+    user = db.query(Users).filter(Users.username == username).first()
+    if not user:
+        return False
+    if not bcrypt_context.verify(password, user.heshed_password):
+        return False
+    return True
+
+@router.post("/auth/",status_code=status.HTTP_201_CREATED)
 async def create_user(create_user_request : CreateUserRequest ,db:db_dependency):
     create_user_model = Users(
         email = create_user_request.email,
@@ -39,3 +50,14 @@ async def create_user(create_user_request : CreateUserRequest ,db:db_dependency)
 @router.get("/auth/get_all_users/")
 async def get_all_users(db:db_dependency):
     return db.query(Users).all()
+
+
+@router.post("/token")
+async def login_for_access_token(form_data :Annotated[OAuth2PasswordRequestForm,Depends()],
+                                 db:db_dependency):
+    user = authenticate_user(username= form_data.username,
+                             password=form_data.password,
+                             db= db)
+    if not user:
+        return "Failed auth"
+    return "Successful auth"
