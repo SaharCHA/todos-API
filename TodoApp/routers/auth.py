@@ -2,8 +2,10 @@ from fastapi import APIRouter,Depends
 from pydantic import BaseModel 
 from models import Users
 from database import db_dependency
+from passlib.context import CryptContext
 router = APIRouter()
 
+bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 
     
@@ -24,13 +26,13 @@ async def create_user(create_user_request : CreateUserRequest ,db:db_dependency)
         first_name = create_user_request.first_name,
         last_name = create_user_request.last_name,
         role = create_user_request.role,
-        heshed_password = create_user_request.password,
+        heshed_password = bcrypt_context.hash(create_user_request.password),
         is_active = True
     )
 
     db.add(create_user_model)
     db.commit()
-    return create_user_model
+    return create_user_model 
 
     
 
