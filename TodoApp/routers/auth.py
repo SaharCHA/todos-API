@@ -1,23 +1,26 @@
-from fastapi import APIRouter,Depends,status
+from fastapi import APIRouter,Depends,status,HTTPException
 from pydantic import BaseModel 
 from models import Users
 from database import db_dependency
 from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm , OAuth2PasswordBearer
 from typing import Annotated
-from jose import jwt 
+from jose import jwt ,JWTError
 from datetime import timedelta,datetime,timezone
 
 
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix='/auth',
+    tags=['auth']
+)
 
-SECRET_KEY = ''
+SECRET_KEY = 'n8Kj3_rYq2Zp9LmVx7Hc5Tg4Uw1Bv0SxQe6FzR_4a9BqT6v'
 ALGORITHM = 'HS256'
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl = '/auth/token')
 
     
 
@@ -48,7 +51,20 @@ def create_access_token(username:str,user_id : int , expires_delta:timedelta):
     encode.update({"exp" : expires})
     return jwt.encode(encode,SECRET_KEY,    algorithm=ALGORITHM)
 
-@router.post("/auth/",status_code=status.HTTP_201_CREATED)
+async def get_current_user(token: Annotated[str,Depends(oauth2_bearer)]):
+    try:
+        payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+        username:str = payload.get('sub')
+        user_id :int = payload.get('id')
+        if username is None or user_id is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail="Could not validate user")
+        return {'username':username,'id':user_id}
+    except JWTError: 
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Could not validate user")
+
+
+@router.post("/",status_code=status.HTTP_201_CREATED)
 async def create_user(create_user_request : CreateUserRequest ,db:db_dependency):
     create_user_model = Users(
         email = create_user_request.email,
@@ -66,7 +82,7 @@ async def create_user(create_user_request : CreateUserRequest ,db:db_dependency)
 
     
 
-@router.get("/auth/get_all_users/")
+@router.get("/get_all_users/")
 async def get_all_users(db:db_dependency):
     return db.query(Users).all()
 
@@ -78,6 +94,8 @@ async def login_for_access_token(form_data :Annotated[OAuth2PasswordRequestForm,
                              password=form_data.password,
                              db= db)
     if not user:
-        return "Failed auth"
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Could not validate user")
+
     token = create_access_token(user.username,user.id,timedelta(minutes=20))
-    return {'access_token':token,'token_type':'baerer'}
+    return {'access_token':token,'token_type':'bearer'}
