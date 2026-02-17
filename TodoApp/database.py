@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker , Session
 from sqlalchemy.ext.declarative import declarative_base
-from fastapi import Depends
+from fastapi import Depends 
 from typing import Annotated
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./todosapp.db"

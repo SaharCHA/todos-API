@@ -50,11 +50,14 @@ async def create_todo(user:user_dependency,
     db.commit()
 
 @router.put("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT) # обработчик для URL /todo/{todo_id}, который обновляет существующую задачу по ее идентификатору. Он принимает данные задачи в формате JSON, проверяет их с помощью модели TodoRequest и обновляет соответствующую запись в базе данных.
-async def update_todo(db:db_dependency,
-                      todo_request: TodoRequest,
-                      todo_id: int):
+async def update_todo(
+     user:user_dependency,
+     db:db_dependency,
+     todo_request: TodoRequest,
+     todo_id: int):
     """Обновление существующей задачи по ее идентификатору."""
-    todo = db.query(models.Todos).filter(models.Todos.id == todo_id).first() # Выборка из базы данных . Сначала вытаскиваем таблицу ,потом сравнивайм id с переданным id и выбираем первую запись которая подходит под условие. Если такой записи нет , то будет возвращено None
+    todo = db.query(models.Todos).filter(models.Todos.id == todo_id)\
+        .filter(models.Todos.owner_id == user.get('id')).first() # Выборка из базы данных . Сначала вытаскиваем таблицу ,потом сравнивайм id с переданным id и выбираем первую запись которая подходит под условие. Если такой записи нет , то будет возвращено None
     if todo is not None:    # Присваеваем и делаем коммит 
         todo.title = todo_request.title
         todo.description = todo_request.description
@@ -65,10 +68,14 @@ async def update_todo(db:db_dependency,
          raise HTTPException(status_code=404, detail="Todo not found")  
 
 @router.delete("/todo/{todo_id}",status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo(db: db_dependency, todo_id: int = Path(gt=0)):
-     todo_request = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
-     if todo_request is not None:
+async def delete_todo(user:user_dependency,db: db_dependency, todo_id: int = Path(gt=0)):
+    if user is None:
+        raise HTTPException(status_code=401,detail="Authentication failed")
+    todo_request = db.query(models.Todos).filter(models.Todos.id == todo_id)\
+        .filter(models.Todos.owner_id == user.get('id')).first()
+    if todo_request is not None:
         db.delete(todo_request)
         db.commit()
         return
-     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Todo not found")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Todo not found")
+
