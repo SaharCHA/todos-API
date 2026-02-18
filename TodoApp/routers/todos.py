@@ -3,8 +3,8 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter, HTTPException, Path,status
-from database import db_dependency
-import models
+from ..database import db_dependency
+from ..models import Todos
 from .auth import get_current_user
 
 
@@ -24,7 +24,7 @@ async def read_all(user:user_dependency, db: db_dependency):
     """Получение всех задач из базы данных.""" 
     if user is None:
         raise HTTPException(status_code=401,detail='Authentication failed')
-    return db.query(models.Todos).filter(models.Todos.owner_id == user.get('id')).all()
+    return db.query(Todos).filter(Todos.owner_id == user.get('id')).all()
 
 
 @router.get("/todo/{todo_id}",status_code=200) # обработчик для URL /todo/{todo_id}, который возвращает конкретную задачу по ее идентификатору.
@@ -32,8 +32,8 @@ async def read_todo(user:user_dependency, db: db_dependency, todo_id: int = Path
         """Получение конкретной задачи по ее идентификатору."""
         if user is None:
              raise HTTPException(status_code=401,detail='Authentication failed')
-        todo = db.query(models.Todos)\
-        .filter(models.Todos.id == todo_id).filter(models.Todos.owner_id == user.get('id')).first()
+        todo = db.query(Todos)\
+        .filter(Todos.id == todo_id).filter(Todos.owner_id == user.get('id')).first()
         if todo is not None:
             return todo
         raise HTTPException(status_code=404, detail="Todo not found")
@@ -45,7 +45,7 @@ async def create_todo(user:user_dependency,
     """добавление новой задачи в базу данных."""
     if user is None: 
          raise HTTPException(status_code=401,detail='Authentication failed')
-    todo_request = models.Todos(**todo_request.model_dump(),owner_id = user.get('id'))
+    todo_request = Todos(**todo_request.model_dump(),owner_id = user.get('id'))
     db.add(todo_request)
     db.commit()
 
@@ -56,8 +56,8 @@ async def update_todo(
      todo_request: TodoRequest,
      todo_id: int):
     """Обновление существующей задачи по ее идентификатору."""
-    todo = db.query(models.Todos).filter(models.Todos.id == todo_id)\
-        .filter(models.Todos.owner_id == user.get('id')).first() # Выборка из базы данных . Сначала вытаскиваем таблицу ,потом сравнивайм id с переданным id и выбираем первую запись которая подходит под условие. Если такой записи нет , то будет возвращено None
+    todo = db.query(Todos).filter(Todos.id == todo_id)\
+        .filter(Todos.owner_id == user.get('id')).first() # Выборка из базы данных . Сначала вытаскиваем таблицу ,потом сравнивайм id с переданным id и выбираем первую запись которая подходит под условие. Если такой записи нет , то будет возвращено None
     if todo is not None:    # Присваеваем и делаем коммит 
         todo.title = todo_request.title
         todo.description = todo_request.description
@@ -71,8 +71,8 @@ async def update_todo(
 async def delete_todo(user:user_dependency,db: db_dependency, todo_id: int = Path(gt=0)):
     if user is None:
         raise HTTPException(status_code=401,detail="Authentication failed")
-    todo_request = db.query(models.Todos).filter(models.Todos.id == todo_id)\
-        .filter(models.Todos.owner_id == user.get('id')).first()
+    todo_request = db.query(Todos).filter(Todos.id == todo_id)\
+        .filter(Todos.owner_id == user.get('id')).first()
     if todo_request is not None:
         db.delete(todo_request)
         db.commit()

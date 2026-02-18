@@ -13,3 +13,6 @@ __pycache__/
 *.egg
 dist/
 build/
+# Test files
+test/test_example.py
+test/__init__.py
