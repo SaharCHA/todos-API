@@ -41,7 +41,7 @@ def authenticate_user(username:str,password:str,db):
     user = db.query(Users).filter(Users.username == username).first()
     if not user:
         return False
-    if not bcrypt_context.verify(password, user.heshed_password):
+    if not bcrypt_context.verify(password, user.hashed_password):
         return False
     return user
 
@@ -73,7 +73,7 @@ async def create_user(create_user_request : CreateUserRequest ,db:db_dependency)
         first_name = create_user_request.first_name,
         last_name = create_user_request.last_name,
         role = create_user_request.role,
-        heshed_password = bcrypt_context.hash(create_user_request.password),
+        hashed_password = bcrypt_context.hash(create_user_request.password),
         is_active = True
     )
 

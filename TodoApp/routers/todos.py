@@ -17,7 +17,7 @@ class TodoRequest(BaseModel):
      title: str = Field(min_length=3)
      description: str = Field(min_length=3, max_length=100)
      priority: int = Field(gt=0,lt=6)
-     completed: bool
+     complete: bool
 
 @router.get("/")
 async def read_all(user:user_dependency, db: db_dependency):
@@ -62,7 +62,7 @@ async def update_todo(
         todo.title = todo_request.title
         todo.description = todo_request.description
         todo.priority = todo_request.priority
-        todo.completed = todo_request.completed
+        todo.complete = todo_request.complete
         db.commit()
     else: # Id не найден
          raise HTTPException(status_code=404, detail="Todo not found")  

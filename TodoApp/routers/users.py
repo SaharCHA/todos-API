@@ -18,10 +18,8 @@ user_dependency = Annotated[dict,Depends(get_current_user)]
 async def get_user(user:user_dependency,db:db_dependency):
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    user_model = db.query(Users).filter(Users.id == user.get('id')).first()
-    if user_model is None:
-        raise HTTPException(status_code=404,detail="User not found")
-    return user_model
+    return db.query(Users).filter(Users.id == user.get('id')).first()
+    
 
 @router.put("/change_password",status_code=status.HTTP_204_NO_CONTENT)
 async def change_password(
@@ -35,7 +33,7 @@ async def change_password(
     if user is False:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     user_model= db.query(Users).filter(Users.id == user.get('id')).first()
-    user_model.heshed_password = bcrypt_context.hash(new_password)
+    user_model.hashed_password = bcrypt_context.hash(new_password)
     db.commit()
     
     

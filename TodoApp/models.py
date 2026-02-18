@@ -9,7 +9,7 @@ class Users(Base):
     username = Column(String, unique = True)
     first_name = Column(String)
     last_name = Column(String)
-    heshed_password = Column(String)
+    hashed_password = Column(String)
     is_active =  Column(Boolean,default=True)
     role = Column(String)
 
@@ -20,5 +20,5 @@ class Todos(Base):
     title = Column(String, index=True)
     description = Column(String, index=True)
     priority = Column(Integer, index=True)
-    completed = Column(Boolean, default=False)
+    complete = Column(Boolean, default=False)
     owner_id = Column(Integer, ForeignKey("users.id"))
