@@ -35,5 +35,14 @@ async def change_password(
     user_model= db.query(Users).filter(Users.id == user.get('id')).first()
     user_model.hashed_password = bcrypt_context.hash(new_password)
     db.commit()
-    
+
+
+
+@router.put("/change_number",status_code=status.HTTP_204_NO_CONTENT)
+async def change_number(user:user_dependency,db:db_dependency,new_phone_number:str=Form(...)):
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    db.query(Users).filter(Users.id == user.get('id')).first().phone_number = new_phone_number
+    db.commit()
+    return {'result':'success'}
     
