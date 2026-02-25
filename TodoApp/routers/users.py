@@ -29,10 +29,11 @@ async def change_password(
     new_password:str=Form(...)):
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    user_check = authenticate_user(user.get('username'),old_password,db)
-    if user is False:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     user_model= db.query(Users).filter(Users.id == user.get('id')).first()
+    # user_check = authenticate_user(user.get('username'),old_password,db)
+    user_check = bcrypt_context.verify(old_password,user_model.hashed_password)
+    if user_check is False:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     user_model.hashed_password = bcrypt_context.hash(new_password)
     db.commit()
 
@@ -44,5 +45,4 @@ async def change_number(user:user_dependency,db:db_dependency,new_phone_number:s
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     db.query(Users).filter(Users.id == user.get('id')).first().phone_number = new_phone_number
     db.commit()
-    return {'result':'success'}
     
