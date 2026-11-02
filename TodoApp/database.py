@@ -1,10 +1,14 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker , Session
 from sqlalchemy.ext.declarative import declarative_base
 from fastapi import Depends 
 from typing import Annotated
 
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:3026@localhost/TodoApplicationDatabase"
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:3026@localhost/TodoApplicationDatabase",
+)
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL

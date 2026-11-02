@@ -16,3 +16,5 @@ build/
 # Test files
 test/test_example.py
 test/__init__.py
+# Local env
+.env

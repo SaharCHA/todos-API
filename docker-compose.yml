@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-3026}
+      POSTGRES_DB: ${POSTGRES_DB:-TodoApplicationDatabase}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-3026}@db:5432/${POSTGRES_DB:-TodoApplicationDatabase}
+      SECRET_KEY: ${SECRET_KEY:-n8Kj3_rYq2Zp9LmVx7Hc5Tg4Uw1Bv0SxQe6FzR_4a9BqT6v}
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:

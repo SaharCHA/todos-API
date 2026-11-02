@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter,Depends,status,HTTPException
 from pydantic import BaseModel 
 from ..models import Users
@@ -16,7 +17,7 @@ router = APIRouter(
     tags=['auth']
 )
 
-SECRET_KEY = 'n8Kj3_rYq2Zp9LmVx7Hc5Tg4Uw1Bv0SxQe6FzR_4a9BqT6v'
+SECRET_KEY = os.getenv('SECRET_KEY', 'n8Kj3_rYq2Zp9LmVx7Hc5Tg4Uw1Bv0SxQe6FzR_4a9BqT6v')
 ALGORITHM = 'HS256'
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
